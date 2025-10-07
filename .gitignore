@@ -1,0 +1,14 @@
+.git/
+.idea/
+.vscode/
+
+/build/
+out/
+/target/
+
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+
+.env
+application-*.yml
+application-*.properties

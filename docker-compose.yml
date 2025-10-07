@@ -1,0 +1,6 @@
+
+services:
+  yoshka-bot:
+    build: .
+    container_name: yoshka-bot
+    env_file: .env

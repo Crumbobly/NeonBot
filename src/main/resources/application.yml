@@ -1,0 +1,19 @@
+spring:
+  main:
+    web-application-type: none
+
+telegram:
+  bot:
+    token: ${TG_TOKEN:}
+    chatId: ${CHAT_ID:}
+    botUsername: ${BOT_NAME:}
+
+yoshka:
+  username: ${YOSHKA_USERNAME:}
+  password: ${YOSHKA_PASSWORD:}
+  urls:
+    usersUrl: "https://bun.rt.ru/backend/project/12935/users"
+    listUrl: "https://bun.rt.ru/backend/task/12935/list?page=0&size=9999"
+    tokenUrl: "https://bun.rt.ru/backend/auth/token"
+    refreshUrl: "https://bun.rt.ru/backend/auth/refresh"
+    loginPageUrl: "https://bun.rt.ru/auth/realms/bun/protocol/openid-connect/auth?scope=openid&response_type=code&client_id=kolobok&redirect_uri=https://bun.rt.ru/authenticator"
