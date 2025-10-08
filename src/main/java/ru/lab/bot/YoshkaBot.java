@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.lab.config.YoshkaBotConfig;
 import ru.lab.dto.TaskDto;
@@ -49,40 +52,62 @@ public class YoshkaBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
+
+            LOGGER.info("Update received: {} ", update.getMessage().getText());
             String messageText = update.getMessage().getText();
             Long chatId = update.getMessage().getChatId();
+            Integer thread = update.getMessage().getMessageThreadId();
 
             switch (messageText) {
-                case "/id":
-                    sendMessage(chatId, chatId.toString());
+
+                case "/start":
+                    sendMessage(chatId, thread, """
+                            Доступные команды:
+                            /id — показать ID чата
+                            /task_info — информация о задачах
+                            /start — показать это сообщение снова
+                            
+                            Бот будет отправлять сообщение о задачах каждый день в 9 утра по МСК в указанный в его конфиге чат.
+                            """);
                     break;
-                // ...
+
+                case "/id":
+                    sendMessage(chatId, thread, chatId.toString());
+                    break;
+
+                case "/task_info":
+                    sendMessage(chatId, thread, collectTaskData());
+                    break;
             }
         }
     }
 
-//    @Scheduled(cron = "0 */10 * * * ?", zone = "UTC")
-    @Scheduled(cron = "0 0 6 * * *", zone = "UTC")
-    public void sendDailyMessage() {
+    public String collectTaskData() {
         final String usersData = yoshkaApiService.getUsersData();
         final String tasksData = yoshkaApiService.getTasksData();
 
         if (usersData == null || usersData.isBlank() || tasksData == null || tasksData.isBlank()) {
             LOGGER.error("Received empty data from API. Skipping message.");
-            sendMessage(yoshkaBotConfig.getChatId(), "Ошибка: не удалось получить данные для отчёта.");
-            return;
+            return "Ошибка: не удалось получить данные для отчёта.";
         }
 
         final List<UserDto> users = dataFormatterService.parseUsers(usersData);
         final List<TaskDto> tasks = dataFormatterService.parseTasks(tasksData);
 
-        String message = messageFormattingService.formatDataToChatBot(users,  tasks);
-        sendMessage(yoshkaBotConfig.getChatId(), message);
+        return messageFormattingService.formatDataToChatBot(users, tasks);
     }
 
-    private void sendMessage(Long chatId, String message){
+//    @Scheduled(cron = "0 */5 * * * ?", zone = "UTC")
+    @Scheduled(cron = "0 0 6 * * *", zone = "UTC")
+    public void sendDailyMessage() {
+        String tasksData = collectTaskData();
+        sendMessage(yoshkaBotConfig.getChatId(), yoshkaBotConfig.getMessageThread(), tasksData);
+    }
+
+    private void sendMessage(Long chatId, Integer thread, String message) {
         final SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
+        sendMessage.setMessageThreadId(thread);
         sendMessage.setText(message);
         sendMessage.setParseMode("HTML");
         try {

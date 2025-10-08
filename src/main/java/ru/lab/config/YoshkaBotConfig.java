@@ -19,11 +19,14 @@ public final class YoshkaBotConfig {
     @NotNull
     private final Long chatId;
 
+    private final Integer messageThread;
+
     @ConstructorBinding
-    public YoshkaBotConfig(String botUsername, String token, Long chatId) {
+    public YoshkaBotConfig(String botUsername, String token, Long chatId, Integer messageThread) {
         this.botUsername = botUsername;
         this.token = token;
         this.chatId = chatId;
+        this.messageThread = messageThread;
     }
 
     public String getBotUsername() {
@@ -36,5 +39,9 @@ public final class YoshkaBotConfig {
 
     public Long getChatId() {
         return chatId;
+    }
+
+    public Integer getMessageThread() {
+        return messageThread;
     }
 }
